@@ -1855,16 +1855,16 @@ class Demo{
     await say('<b>Gate: SHIP.</b> Deploy the Tenora arrival (TEN-348). Built, verified, not live.\nThen: LXA-41 run the September import (7) · RAI-22 answer two bookings (6)');
     await a.wait(2300);
 
-    /* 2 · a rabbit-hole request: it stops itself before doing any work */
-    await a.type(input,"redo the ascii canvas on my site real quick",30);await send();
+    /* 2 · the gate vets a rabbit hole */
+    await a.type(input,"gonna redo the site's ascii canvas real quick",30);await send();
     hook('UserPromptSubmit · brain/tools/rabbit-gate.sh',['Live #1 move: deploy the Tenora arrival (TEN-348)','!🚧 tripwire: "real quick"']);
     await a.wait(600);
     await think('Scoring it against goals.md',900);
-    await say('<span class="stop">Stopped. Not touching the site.</span> Third site pass this week: it scores a <b>3</b>, TEN-348 is a <b>9</b>.');
+    await say('<b>Gate: RABBIT.</b> Third site pass this week. It scores a <b>3</b>; TEN-348 is a <b>9</b>.');
     await a.wait(300);
     tool('Update','brain/queue.json','<span class="add">+1 row</span> site-ascii-redo · idea · 3 · your words kept');
     await a.wait(300);
-    await say('Parked with your words. Type <b>override</b> and I start it now.');
+    await say('Parked, not lost. <span class="stop">Not starting until you type override.</span>');
     await a.wait(2400);
 
     /* 3 · every ask becomes a row */
