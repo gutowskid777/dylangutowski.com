@@ -85,6 +85,9 @@ header.top{display:flex;justify-content:space-between;align-items:center;padding
   .contact a span:last-child{font-size:clamp(18px,5.2vw,24px)}
 }
 footer{padding-block:20px 44px;font-size:15px;color:var(--mute);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a:hover,footer a:focus-visible{color:var(--signal);outline:none}
+footer .foot-r{display:flex;gap:32px;flex-wrap:wrap}
+footer .foot-link{color:var(--ink);border-bottom:1.5px solid currentColor;padding-bottom:1px}
 
 /* ============ DEMO FRAME (shared) ============ */
 .demo{--k:1;--dw:100%;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;background:#fff;position:relative;box-shadow:6px 6px 0 var(--paper-2)}
@@ -1360,7 +1363,7 @@ footer{padding-block:20px 44px;font-size:15px;color:var(--mute);display:flex;jus
     </ul>
   </section>
 
-  <footer><span>Dylan Gutowski</span><span>New York and Ithaca</span></footer>
+  <footer><span>Dylan Gutowski</span><span class="foot-r"><span>New York and Ithaca</span><a class="foot-link" href="/learn">Learn</a></span></footer>
 </main>
 
 <script>
