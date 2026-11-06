@@ -1136,7 +1136,7 @@ footer .foot-link{color:var(--ink);border-bottom:1.5px solid currentColor;paddin
       <div class="site">Private, passcode-gated &nbsp;&middot;&nbsp; built for the chapter's alumni chair</div>
     </div>
     <p class="blurb">A directory of <b>1,282 Cornell Lambda Chi Alpha alumni</b>. Search anyone, filter by decade, field, school and state, open a person, see where everyone lives, and see the whole chapter by the numbers.</p>
-    <div class="demo lx" id="d-lxa" data-loop="39800">
+    <div class="demo lx" id="d-lxa" data-loop="30700">
       <div class="dchrome"><span class="url">lxa alumni &middot; demo data</span><span class="dstate"><i class="dot"></i><span class="txt">Playing itself</span></span></div>
       <div class="dframe"><div class="dbody">
         <div class="lx-head"><div class="lx-mark">ΛΧΑ <span>&middot;</span> Cornell</div><nav class="lx-nav"><button data-t="dir" class="on">Directory</button><button data-t="map">Map</button><button data-t="ins">Insights</button></nav></div>
@@ -1753,7 +1753,7 @@ class Demo{
   const PL=Object.entries(GEO).map(([city,ll])=>({city,ll,people:DATA.filter(a=>a.city===city).sort((x,y)=>(y.mentor?1:0)-(x.mentor?1:0)||y.year-x.year)})).filter(p=>p.people.length);
   const crad=n=>{const q=Math.sqrt(n);return q<=1?15:q<=Math.sqrt(5)?15+(q-1)*(7/(Math.sqrt(5)-1)):q<=Math.sqrt(12)?22+(q-Math.sqrt(5))*(10/(Math.sqrt(12)-Math.sqrt(5))):q<=5?32+(q-Math.sqrt(12))*(12/(5-Math.sqrt(12))):44;};
   const G={map:null,ready:false};
-  const HOME_LL=[-93.5,38.6],HOME_Z=3.0;
+  const HOME_LL=[-93.5,38.6],HOME_Z=3.0,NY_LL=[-73.96,40.875],NY_Z=8.5;
   function glLoad(){
     if(G.tried)return;G.tried=true;
     const CDN='https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/';
@@ -1764,7 +1764,7 @@ class Demo{
     try{
       const feats=PL.map((pl,i)=>({type:'Feature',properties:{i,n:pl.people.length,txt:pl.people.length===1?initials(pl.people[0].name):String(pl.people.length),m:pl.people.length===1&&pl.people[0].mentor?1:0},geometry:{type:'Point',coordinates:[pl.ll[1],pl.ll[0]]}}));
       mapSec.classList.toggle('parked',mapSec.hidden);
-      const map=new maplibregl.Map({container:$('.lx-gl',root),style:'https://tiles.openfreemap.org/styles/positron',center:HOME_LL,zoom:HOME_Z,interactive:false,attributionControl:{compact:false},fadeDuration:0});
+      const map=new maplibregl.Map({container:$('.lx-gl',root),style:'https://tiles.openfreemap.org/styles/positron',center:HOME_LL,zoom:HOME_Z,interactive:false,attributionControl:{compact:false},fadeDuration:0,pixelRatio:Math.min(devicePixelRatio||1,1.5)});
       map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left');
       map.on('load',()=>{
         map.addSource('bros',{type:'geojson',data:{type:'FeatureCollection',features:feats},cluster:true,clusterRadius:42,clusterMaxZoom:7,clusterProperties:{sum:['+',['get','n']]}});
@@ -1772,11 +1772,18 @@ class Demo{
         map.addLayer({id:'cluN',type:'symbol',source:'bros',filter:['has','point_count'],layout:{'text-field':['to-string',['get','sum']],'text-font':['Noto Sans Bold'],'text-size':14,'text-allow-overlap':true},paint:{'text-color':'#fff'}});
         map.addLayer({id:'pt',type:'circle',source:'bros',filter:['!',['has','point_count']],paint:{'circle-color':['case',['==',['get','m'],1],'#C8A02E','#4A2C7A'],'circle-radius':['interpolate',['linear'],['sqrt',['get','n']],1,14,5,22,12,32],'circle-stroke-color':'#fff','circle-stroke-width':2}});
         map.addLayer({id:'ptN',type:'symbol',source:'bros',filter:['!',['has','point_count']],layout:{'text-field':['get','txt'],'text-font':['Noto Sans Bold'],'text-size':['case',['>',['get','n'],1],14,11],'text-allow-overlap':true,'text-ignore-placement':true},paint:{'text-color':'#fff'}});
-        map.once('idle',()=>{G.ready=true;});setTimeout(()=>{G.ready=true;},6000);
+        glWarm(map);
       });
       map.on('error',e=>console.warn('lxa map',e&&e.error&&e.error.message));
       G.map=map;
     }catch(e){console.warn('lxa map',e);G.map=null;G.failed=true;mapSec.classList.remove('parked');}
+  }
+  /* while the map is still hidden, visit the stops of the flight so its tiles are already here when it plays */
+  async function glWarm(map){
+    const idle=ms=>Promise.race([new Promise(r=>map.once('idle',r)),sleep(ms)]);
+    await idle(5000);
+    for(const z of [5,7,NY_Z]){if(!mapSec.classList.contains('parked'))break;map.jumpTo({center:NY_LL,zoom:z});await idle(1000);}
+    map.jumpTo({center:HOME_LL,zoom:HOME_Z});G.ready=true;
   }
   new IntersectionObserver(es=>{if(es[0].isIntersecting)glLoad();},{rootMargin:'1400px 0px'}).observe(root);
   /* what is drawn nearest a city right now: a cluster (to split) or that city's own orb (to list) */
@@ -1799,15 +1806,14 @@ class Demo{
     await a.type(q,'Evercore',70);await a.wait(700);
     const row=$('.lx-row',list);await a.click(row);await a.wait(1900);
     await a.click($('.x',panel));await a.wait(400);
-    await a.click(clear);await a.wait(400);
     for(let i=0;i<40&&!G.ready&&!G.failed;i++)await a.wait(200);
     if(G.ready){
-      await a.click($('.lx-nav button[data-t=map]',root));await a.wait(1500);
-      /* into the New York area until every town stands on its own, then one town, then the mentor there */
-      const town=PL.find(p=>p.city===HERO.city);
-      for(const [z,ctr] of [[6.5,[-74.3,41.2]],[8.5,[-73.96,40.875]]]){const c=glNearest(GEO['New York']);if(!c||!c.clu)break;const q2=mapPt(c);
-        await a.clickAt(q2.x,q2.y,()=>G.map.easeTo({center:ctr,zoom:z,duration:REDUCE?0:1200}));await a.wait(1150);await Promise.race([new Promise(r=>G.map.once('idle',r)),sleep(1500)]);a.chk();}
-      await a.wait(1300);const c=glNearest(town.ll);
+      await a.click($('.lx-nav button[data-t=map]',root));await a.wait(250);
+      /* the cursor goes onto the map, then one flight from the whole country to the towns around New York, then one town, then the mentor there */
+      const ny=G.map.project(NY_LL),q1=mapPt(ny);await a.moveTo(q1.x,q1.y,600);
+      const town=PL.find(p=>p.city===HERO.city),landed=new Promise(r=>G.map.once('moveend',r));
+      G.map.flyTo({center:NY_LL,zoom:NY_Z,duration:REDUCE?0:2600});await Promise.race([landed,sleep(3200)]);a.chk();
+      await Promise.race([new Promise(r=>G.map.once('idle',r)),sleep(500)]);a.chk();const c=glNearest(town.ll);
       if(c&&!c.clu){const q2=mapPt(c);await a.clickAt(q2.x,q2.y,()=>mapList(c));await a.wait(1500);
         const row=$$('em',mpop).find(e=>e.textContent.includes(HERO.name));
         if(row){await a.click(row,()=>{mpop.classList.remove('on');openDetail(HERO.id);});await a.wait(2600);await a.click($('.x',panel));await a.wait(300);}}
